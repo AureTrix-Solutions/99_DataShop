@@ -1,1 +1,201 @@
+# 99 Data Shop
 
+`99 Data Shop` is an interactive Google Colab notebook containing operational
+data-processing and prediction tools. The project currently consists of a
+single notebook:
+
+- [`99.ipynb`](./99.ipynb)
+
+The notebook is designed for Google Colab and uses `ipywidgets` for its user
+interface. It is not currently packaged as a standalone Python application and
+does not run on Replit without compatibility changes.
+
+## Included tools
+
+### Production-hours predictor
+
+Estimates production hours for several XMT types:
+
+- LBT
+- Band 4
+- Band 5/6
+- Band 7
+- Band 8
+- Band 9/10
+
+The interface collects values such as bench count, shift count, month, and
+target, depending on the selected XMT type. Predictions are generated from
+pretrained Joblib model files downloaded at runtime.
+
+Expected model files include:
+
+- `LBT.pkl`
+- `band_4.pkl`
+- `Band_5_6.pkl`
+- `Band_7.pkl`
+- `Band 8.pkl`
+- `band_910.pkl`
+
+### Manpower throughput calculator
+
+Accepts an average available manpower value and uses a downloaded capacity
+model to calculate estimated throughput.
+
+Expected model:
+
+- `capacity.pkl` in Colab
+- `capacity_local.pkl` in the notebook's hard-coded Windows local-runtime path
+
+### Muster report processor
+
+Processes uploaded muster workbooks and can:
+
+- Clean and normalize Excel reports
+- Select the latest corrected copies
+- Combine cleaned reports
+- Categorize muster records using a downloaded model
+- Produce category averages
+
+Upload muster files as a ZIP archive. Keep each archive to one calendar year
+and do not mix years. The notebook prompts for a four-digit year.
+
+Generated files include:
+
+- `combined_cleaned_muster.xlsx`
+- `categorized_muster.xlsx`
+- `avg_category_count.xlsx`
+
+### Cannibalization source-list and count tool
+
+Processes cannibalization report data for these gear types:
+
+- 910
+- LBT
+- UEU
+
+This workflow expects:
+
+- `cann_files.zip`, produced by the related 640 reports workflow
+- An uploaded AWP CSV
+- Reference JSON files downloaded by the notebook
+
+The tool cross-references parts and PN data, then generates a consolidated
+Excel output.
+
+## Development-only cells
+
+The final section of the notebook contains development and maintenance code,
+not polished end-user workflows:
+
+- A midband cannibalization data-processing cell
+- A broad `/content` cleanup cell
+- A distribution-model training experiment using a decision tree and Gaussian
+  process ensemble
+
+The model-training cell expects `dfmodel.xlsx`, trains against a hard-coded
+target, and saves `Band 4_ensemble_model.pkl`.
+
+## Recommended environment
+
+The notebook was built for Google Colab. Open it using the badge at the top of
+the notebook or this URL:
+
+<https://colab.research.google.com/github/AureTrix-Solutions/99_DataShop/blob/main/99.ipynb>
+
+The notebook instructions recommend Microsoft Edge with third-party cookies
+enabled so Colab widgets and file interactions work correctly.
+
+### Python dependencies
+
+The notebook imports or relies on:
+
+- Python 3
+- pandas
+- NumPy
+- Joblib
+- ipywidgets
+- IPython
+- scikit-learn
+- matplotlib
+- requests
+- openpyxl for Excel input/output
+
+Standard-library modules include `datetime`, `io`, `json`, `math`, `os`, `re`,
+`shutil`, `sys`, `warnings`, and `zipfile`.
+
+No dependency lock file is currently included. The notebook's repair cell does
+not install every dependency listed above.
+
+## Running the notebook
+
+1. Open `99.ipynb` in Google Colab.
+2. Run the code cell for the tool you want to use:
+   - Production hours
+   - Manpower throughput
+   - Muster
+   - Cannibalization
+3. Wait for the cell to finish initializing and downloading its required
+   models or reference data.
+4. Use the displayed widgets to select options and upload files.
+5. If a widget stops responding, rerun that tool's main code cell.
+6. Download generated output files before ending the Colab session.
+
+Run the notebook-fix cell only as a last resort. Do not run the development or
+cleanup cells unless you understand their inputs and side effects.
+
+## Additional development inputs
+
+Some development cells require files that are not included in this repository:
+
+- `midband_out_parts.csv`
+- `midband_pn_dict.json`
+- `midband_parts_dict.json`
+- `uoc_parts_dict.json`
+- `midband_uoc_dict.json`
+- `part_cross_reference_dict.json`
+- `910_ipb_dict.json`
+- `lbt_ipb_dict.json`
+- `ueu_ipb_dict.json`
+- `dfmodel.xlsx`
+
+The production workflows also download pretrained models and reference files
+from external Dropbox folders. Those assets are not versioned with this
+repository, so availability and reproducibility depend on the external links.
+
+## Important safety notes
+
+- **Do not load untrusted model files.** Joblib/Pickle files can execute code
+  when loaded. Only use models from a source you trust.
+- **Do not upload untrusted ZIP archives.** The current notebook extracts ZIP
+  contents without validating archive paths.
+- **Cell 22 resets the Python environment.** It uninstalls installed packages,
+  reinstalls selected packages, and restarts the Colab runtime.
+- **Cell 25 deletes files.** It removes nearly everything under `/content`
+  except a small allowlist. Download any needed output first.
+- Several workflows delete temporary uploads, extracted directories, and
+  intermediate files as they run.
+- Runtime downloads are not protected by pinned versions, checksums, or
+  integrity verification.
+
+## Current limitations
+
+- Colab-specific APIs such as `google.colab.files`, `google.colab.output`, and
+  `google.colab.runtime` prevent direct execution in a standard Jupyter or
+  Replit environment.
+- Paths assume either Colab's `/content` directory or one specific Windows
+  directory.
+- Models and reference datasets are external and unversioned.
+- Input filenames and spreadsheet/CSV columns must match the formats expected
+  by the notebook.
+- There are no automated tests or validation fixtures.
+- Model predictions do not include uncertainty or model-version reporting.
+- The development distribution model evaluates against its training data and
+  should not be treated as production validation.
+
+## Replit status
+
+The repository is intentionally left in its imported, Colab-oriented form. No
+Replit workflow or dependency environment has been configured. Porting it to
+Replit would require replacing Colab upload/download APIs, making paths
+portable, declaring dependencies, obtaining the required external assets, and
+adding a safe user interface for file processing.
